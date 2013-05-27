@@ -17,6 +17,22 @@
  */
 package org.apache.pig.backend.hadoop.executionengine.mapReduceLayer;
 
+// ALL INTERNETARCHIVE CHANGES INCLUDE A COMMENT STARTING "// IA "
+
+// IA Add use of boolean config property "pig.forceTypedComparator"
+//
+// When set to 'true', it forces Pig to use a "typed coparator".
+// The typed comparators deserialize the value into a Java object
+// and then use that object's compareTo() method for sorting.
+// This results in normal lexographical sort order for Strings.
+//
+// When set to 'false', then Pig will select the comparator according
+// to its normal rules, which is often leads to the selection of an
+// optimized comparator which sorts shorter values to the front,
+// producing a sort-order different than lexographical ordering.
+//
+// This property is 'false' by default.
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -1019,7 +1035,8 @@ public class JobControlCompiler{
                 if (succ.isGlobalSort()) hasOrderBy = true;
             }
         }
-        if (hasOrderBy) {
+        // IA Add check of custom property to force use of type comparator.
+        if (hasOrderBy || conf.getBoolean("pig.forceTypedComparator",false) ) {
             switch (keyType) {
             case DataType.BOOLEAN:
                 job.setSortComparatorClass(PigBooleanRawComparator.class);
